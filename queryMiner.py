@@ -61,16 +61,28 @@ def create_dir(dir):
         print_error(f"Erro ao criar o diretório '{dir}': {e}")
 
 
-def cleaner(*args):
-    for dir in args:
+def remove(dir):
+    try:
         if os.path.isfile(dir):
             os.remove(dir)
             print_ok(f"Arquivo {dir} excluído.")
         elif os.path.isdir(dir):
             shutil.rmtree(dir)
             print_ok(f"Pasta {dir} e seu conteúdo foram excluídos.")
-        # else:
-        # print_error(f"{dir} não é um arquivo ou pasta válida.")
+    except Exception as e:
+        print_error(f"Erro ao remover o arquivo {dir}: {e}")
+
+def cleaner(*args):
+    for name in args:
+        if name.endswith('*'):
+            name=name[:-1]
+            for filename in os.listdir():
+                if filename.startswith(name):
+                    remove(filename)
+        else:
+            for filename in os.listdir():
+                if filename == name:
+                    remove(filename)
 
 
 def batch_files(dir, num, mode, verbose):
