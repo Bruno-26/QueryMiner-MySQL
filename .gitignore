@@ -1,0 +1,6 @@
+threads/
+batches/
+mprofile*
+output*
+volumetria*
+log-batches*
