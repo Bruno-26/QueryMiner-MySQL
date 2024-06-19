@@ -6,6 +6,8 @@ import subprocess
 import sys
 import time
 
+from memory_profiler import profile
+
 GREEN = "\033[92m"
 RED = "\033[91m"
 RESET = "\033[0m"
@@ -62,15 +64,18 @@ def create_dir(dir):
 
 
 def cleaner(*args):
-    for dir in args:
-        if os.path.isfile(dir):
-            os.remove(dir)
-            print_ok(f"Arquivo {dir} excluído.")
-        elif os.path.isdir(dir):
-            shutil.rmtree(dir)
-            print_ok(f"Pasta {dir} e seu conteúdo foram excluídos.")
-        # else:
-        # print_error(f"{dir} não é um arquivo ou pasta válida.")
+    for name in args:
+        for filename in os.listdir():
+            if filename.startswith(name):
+                try:
+                    if os.path.isfile(filename):
+                        os.remove(filename)
+                        print_ok(f"Arquivo {filename} excluído.")
+                    elif os.path.isdir(filename):
+                        shutil.rmtree(filename)
+                        print_ok(f"Pasta {filename} e seu conteúdo foram excluídos.")
+                except Exception as e:
+                    print_error(f"Erro ao remover o arquivo {filename}: {e}")
 
 
 def batch_files(dir, num, mode, verbose):
@@ -353,11 +358,19 @@ def volumetria(threads, disk):
     print(" " * 60, end="\r", flush=True)
 
 
+@profile
 def main(logfile, disk, merge, mergenum, mode, vol, verbose, clear):
     start_time = time.time()
 
     if clear:
-        cleaner("log-batches.txt", "volumetria.sql", "threads", "batches")
+        cleaner(
+            "log-batches.txt",
+            "volumetria.sql",
+            "threads",
+            "batches",
+            "mprofile",
+            "output.png",
+        )
         sys.exit(1)
 
     parameters = {
