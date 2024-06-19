@@ -62,20 +62,29 @@ def create_dir(dir):
     except Exception as e:
         print_error(f"Erro ao criar o diretório '{dir}': {e}")
 
+def remove(dir):
+    try:
+        if os.path.isfile(dir):
+            os.remove(dir)
+            print_ok(f"Arquivo {dir} excluído.")
+        elif os.path.isdir(dir):
+            shutil.rmtree(dir)
+            print_ok(f"Pasta {dir} e seu conteúdo foram excluídos.")
+    except Exception as e:
+        print_error(f"Erro ao remover o arquivo {dir}: {e}")
 
 def cleaner(*args):
     for name in args:
-        for filename in os.listdir():
-            if filename.startswith(name):
-                try:
-                    if os.path.isfile(filename):
-                        os.remove(filename)
-                        print_ok(f"Arquivo {filename} excluído.")
-                    elif os.path.isdir(filename):
-                        shutil.rmtree(filename)
-                        print_ok(f"Pasta {filename} e seu conteúdo foram excluídos.")
-                except Exception as e:
-                    print_error(f"Erro ao remover o arquivo {filename}: {e}")
+        if name.endswith('*'):
+            name=name[:-1]
+            for filename in os.listdir():
+                if filename.startswith(name):
+                    remove(filename)
+        else:
+            for filename in os.listdir():
+                if filename == name:
+                    remove(filename)
+
 
 
 def batch_files(dir, num, mode, verbose):
@@ -368,7 +377,7 @@ def main(logfile, disk, merge, mergenum, mode, vol, verbose, clear):
             "volumetria.sql",
             "threads",
             "batches",
-            "mprofile",
+            "mprofile*",
             "output.png",
         )
         sys.exit(1)
