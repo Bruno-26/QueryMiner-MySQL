@@ -5,11 +5,18 @@ import shutil
 import subprocess
 import sys
 import time
+import chardet
 
 GREEN = "\033[92m"
 RED = "\033[91m"
 RESET = "\033[0m"
 BLUE = "\033[94m"
+
+def detect_encoding(filename):
+    with open(filename, 'rb') as f:
+        rawdata = f.read()
+        result = chardet.detect(rawdata)
+        return result['encoding']
 
 
 def print_ok(text):
@@ -147,6 +154,9 @@ def batch_files(dir, num, mode, verbose):
 
 
 def process_mysql_log(input_file, disk, verbose):
+    encoding = detect_encoding(input_file)
+    print_info(f"Codificação detectada: {encoding}")
+
     print_info("Iniciando a analise")
     # Regex
     pattern = r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z)\s+(\d+)\s+(Query|Execute|Prepare)\s+(.*)$"
@@ -157,13 +167,16 @@ def process_mysql_log(input_file, disk, verbose):
 
     num_linhas = 0
 
+
+
+
     # Abrir o arquivo em modo de leitura
-    with open(input_file, "r") as arquivo:
+    with open(input_file, "r", encoding=encoding, errors='replace') as arquivo:
         for _ in arquivo:
             num_linhas += 1
     num_linhas = "{:,}".format(num_linhas).replace(",", ".")
 
-    with open(input_file, "r") as f:
+    with open(input_file, "r", encoding=encoding, errors='replace') as f:
         # Lista temporária para as linhas da consulta
         current_query_lines = []
 
