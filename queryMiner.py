@@ -12,11 +12,19 @@ RED = "\033[91m"
 RESET = "\033[0m"
 BLUE = "\033[94m"
 
-def detect_encoding(filename):
-    with open(filename, 'rb') as f:
-        rawdata = f.read()
-        result = chardet.detect(rawdata)
-        return result['encoding']
+
+def detect_encoding(filename, chunk_size=4096):
+    detector = chardet.UniversalDetector()
+    with open(filename, "rb") as f:
+        while True:
+            chunk = f.read(chunk_size)
+            if not chunk:  # Fim do arquivo
+                break
+            detector.feed(chunk)
+            if detector.done:  # Detecção concluída
+                break
+    detector.close()
+    return detector.result
 
 
 def print_ok(text):
@@ -79,10 +87,11 @@ def remove(dir):
     except Exception as e:
         print_error(f"Erro ao remover o arquivo {dir}: {e}")
 
+
 def cleaner(*args):
     for name in args:
-        if name.endswith('*'):
-            name=name[:-1]
+        if name.endswith("*"):
+            name = name[:-1]
             for filename in os.listdir():
                 if filename.startswith(name):
                     remove(filename)
@@ -154,7 +163,16 @@ def batch_files(dir, num, mode, verbose):
 
 
 def process_mysql_log(input_file, disk, verbose):
-    encoding = detect_encoding(input_file)
+
+    result = detect_encoding(input_file)
+    encoding = result["encoding"]
+    confidence = result["confidence"]
+
+    if confidence < 0.8:
+        print_error(
+            "Pouca confiança na deteção da codificação. Necessária uma inspeção manual."
+        )
+
     print_info(f"Codificação detectada: {encoding}")
 
     print_info("Iniciando a analise")
@@ -167,16 +185,13 @@ def process_mysql_log(input_file, disk, verbose):
 
     num_linhas = 0
 
-
-
-
     # Abrir o arquivo em modo de leitura
-    with open(input_file, "r", encoding=encoding, errors='replace') as arquivo:
+    with open(input_file, "r", encoding=encoding, errors="replace") as arquivo:
         for _ in arquivo:
             num_linhas += 1
     num_linhas = "{:,}".format(num_linhas).replace(",", ".")
 
-    with open(input_file, "r", encoding=encoding, errors='replace') as f:
+    with open(input_file, "r", encoding=encoding, errors="replace") as f:
         # Lista temporária para as linhas da consulta
         current_query_lines = []
 
